@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.sp
 import com.example.to_do.ui.theme.TodoTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
@@ -38,9 +40,12 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 
 
 class MainActivity : ComponentActivity() {
@@ -56,11 +61,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+data class TodoItem(val text: String, var isCompleted: Boolean)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
-    val todoItems = remember { mutableStateListOf<String>() }
+    val todoItems = remember { mutableStateListOf<TodoItem>() }
     val (showDialog, setShowDialog) = remember { mutableStateOf(false) }
+    val (errorMessage, setErrorMessage) = remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -77,17 +85,19 @@ fun MainScreen() {
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            todoItems.forEach { item ->
+            todoItems.forEachIndexed { index, item ->
                 Row(
                     modifier = Modifier
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = item, fontSize = 20.sp)
+                    Text(text = item.text, fontSize = 20.sp)
                     Checkbox(
-                        checked = false,
-                        onCheckedChange = {}
+                        checked = item.isCompleted,
+                        onCheckedChange = {
+                            todoItems[index] = item.copy(isCompleted = it)
+                        }
                     )
                 }
             }
@@ -96,14 +106,32 @@ fun MainScreen() {
         if (showDialog) {
             TodoDialog(
                 onDismiss = { setShowDialog(false) },
-                onSave = { item ->
-                    todoItems.add(item)
-                    setShowDialog(false)
+                onSave = { text ->
+                    if (text.isEmpty()) {
+                        setErrorMessage("Todo item cannot be empty")
+                    } else {
+                        todoItems.add(TodoItem(text, false))
+                        setShowDialog(false)
+                        setErrorMessage("")
+                    }
                 }
             )
         }
+
+        if (errorMessage.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x80000000))
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = errorMessage, color = Color.Red, fontSize = 16.sp)
+            }
+        }
     }
 }
+
 
 
 @Composable
@@ -134,14 +162,25 @@ fun TodoDialog(onDismiss: () -> Unit, onSave: (String) -> Unit) {
                     IconButton(onClick = { text = TextFieldValue("") }) {
                         Icon(Icons.Default.Close, contentDescription = "Clear")
                     }
-                }
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Text
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        if (text.text.isNotEmpty()) {
+                            onSave(text.text)
+                        }
+                    }
+                )
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 horizontalArrangement = Arrangement.End,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                TextButton(onClick = onDismiss) {
+                OutlinedButton(onClick = onDismiss) {
                     Text("Cancel")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -154,21 +193,5 @@ fun TodoDialog(onDismiss: () -> Unit, onSave: (String) -> Unit) {
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TodoTheme {
-        Greeting("Android")
     }
 }
