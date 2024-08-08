@@ -3,50 +3,26 @@ package com.example.to_do
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.to_do.ui.theme.TodoTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.to_do.ui.theme.TodoTheme
+import com.example.to_do.viewmodal.TodoListViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,18 +37,18 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class TodoItem(val text: String, var isCompleted: Boolean)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
-    val todoItems = remember { mutableStateListOf<TodoItem>() }
+    val todoListViewModel: TodoListViewModel = viewModel()
+    val todoItems by todoListViewModel.todoItems.collectAsState()
+    val errorMessage by todoListViewModel.errorMessage.collectAsState()
     val (showDialog, setShowDialog) = remember { mutableStateOf(false) }
-    val (errorMessage, setErrorMessage) = remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Todo") })
+            TopAppBar(title = { Text("Todo App") })
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { setShowDialog(true) }) {
@@ -85,7 +61,7 @@ fun MainScreen() {
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            todoItems.forEachIndexed { index, item ->
+            todoItems.forEach { item ->
                 Row(
                     modifier = Modifier
                         .padding(horizontal = 12.dp, vertical = 8.dp)
@@ -96,7 +72,13 @@ fun MainScreen() {
                     Checkbox(
                         checked = item.isCompleted,
                         onCheckedChange = {
-                            todoItems[index] = item.copy(isCompleted = it)
+                            scope.launch {
+                                todoListViewModel.updateTodo(
+                                    userId = "user_id",
+                                    todoId = item.id,
+                                    isCompleted = it
+                                )
+                            }
                         }
                     )
                 }
@@ -107,12 +89,12 @@ fun MainScreen() {
             TodoDialog(
                 onDismiss = { setShowDialog(false) },
                 onSave = { text ->
-                    if (text.isEmpty()) {
-                        setErrorMessage("Todo item cannot be empty")
-                    } else {
-                        todoItems.add(TodoItem(text, false))
+                    scope.launch {
+                        todoListViewModel.createTodo(
+                            userId = "user_id",
+                            text = text
+                        )
                         setShowDialog(false)
-                        setErrorMessage("")
                     }
                 }
             )
@@ -131,8 +113,6 @@ fun MainScreen() {
         }
     }
 }
-
-
 
 @Composable
 fun TodoDialog(onDismiss: () -> Unit, onSave: (String) -> Unit) {
