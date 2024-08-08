@@ -1,30 +1,16 @@
 package com.example.to_do
 
+import UserPreferencesManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.to_do.datastore.UserPreferencesManager
 import com.example.to_do.ui.CreateAccountScreen
 import com.example.to_do.ui.LoginScreen
 import com.example.to_do.ui.MainScreen
 import com.example.to_do.ui.theme.TodoTheme
 import com.example.to_do.viewmodal.ViewModelFactory
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var userPreferencesManager: UserPreferencesManager
@@ -32,9 +18,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         userPreferencesManager = UserPreferencesManager(applicationContext)
-        val factory = ViewModelFactory(userPreferencesManager)
         setContent {
             TodoTheme {
+                val factory = ViewModelFactory(userPreferencesManager)
                 AppNavigator(userPreferencesManager, factory)
             }
         }
@@ -45,11 +31,14 @@ class MainActivity : ComponentActivity() {
 fun AppNavigator(userPreferencesManager: UserPreferencesManager, factory: ViewModelFactory) {
     var userId by remember { mutableStateOf<String?>(null) }
     var currentScreen by remember { mutableStateOf("Login") }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        userPreferencesManager.userId.collect { id ->
-            userId = id
-            currentScreen = if (id != null) "main" else "Login"
+        scope.launch {
+            userPreferencesManager.userId.collect { id ->
+                userId = id
+                currentScreen = if (id != null) "main" else "Login"
+            }
         }
     }
 
@@ -77,8 +66,10 @@ fun AppNavigator(userPreferencesManager: UserPreferencesManager, factory: ViewMo
         "main" -> MainScreen(
             userId = userId,
             onLogout = {
-                userPreferencesManager.clearUserId()
-                currentScreen = "Login"
+                scope.launch {
+                    userPreferencesManager.clearUserId()
+                    currentScreen = "Login"
+                }
             },
             factory = factory
         )

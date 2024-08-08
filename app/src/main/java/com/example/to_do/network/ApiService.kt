@@ -16,7 +16,7 @@ interface ApiService {
     data class LoginResponse(val userId: String)
 
     @POST("login")
-    suspend fun login(@Body request: LoginRequest): retrofit2.Response<LoginResponse>
+    suspend fun login(@Body request: com.example.to_do.model.LoginRequest): retrofit2.Response<LoginResponse>
 
     companion object {
         private var retrofitService: ApiService? = null

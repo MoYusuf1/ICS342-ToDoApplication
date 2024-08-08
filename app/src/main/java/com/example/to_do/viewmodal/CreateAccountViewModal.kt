@@ -1,8 +1,8 @@
 package com.example.to_do.viewmodel
 
+import UserPreferencesManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.to_do.datastore.UserPreferencesManager
 import com.example.to_do.model.RegisterState
 import com.example.to_do.model.RegisterRequest
 import com.example.to_do.network.RetrofitInstance.api

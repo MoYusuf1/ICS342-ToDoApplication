@@ -1,5 +1,6 @@
 package com.example.to_do.ui
 
+import LoginViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.to_do.viewmodal.LoginViewModel
 import com.example.to_do.viewmodal.ViewModelFactory
 
 @Composable
@@ -65,4 +65,3 @@ fun LoginScreen(
         }
     }
 }
-

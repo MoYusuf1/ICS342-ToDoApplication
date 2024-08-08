@@ -1,17 +1,13 @@
-package com.example.to_do.viewmodel
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.to_do.datastore.UserPreferencesManager
 import com.example.to_do.model.LoginRequest
 import com.example.to_do.network.ApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-data class LoginState(val isSuccess: Boolean = false, val userId: String? = null)
-
 class LoginViewModel(private val userPreferencesManager: UserPreferencesManager) : ViewModel() {
+
     private val _loginState = MutableStateFlow(LoginState())
     val loginState: StateFlow<LoginState> get() = _loginState
 
@@ -27,10 +23,10 @@ class LoginViewModel(private val userPreferencesManager: UserPreferencesManager)
                         userPreferencesManager.saveUserId(loginResponse.userId)
                         _loginState.value = LoginState(isSuccess = true, userId = loginResponse.userId)
                     } ?: run {
-                        _errorMessage.value = "Login failed"
+                        _loginState.value = LoginState(errorMessage = "Login failed")
                     }
                 } else {
-                    _errorMessage.value = "Login failed"
+                    _loginState.value = LoginState(errorMessage = "Login failed")
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Network error"
@@ -38,3 +34,5 @@ class LoginViewModel(private val userPreferencesManager: UserPreferencesManager)
         }
     }
 }
+
+data class LoginState(val isSuccess: Boolean = false, val userId: String? = null, val errorMessage: String = "")
