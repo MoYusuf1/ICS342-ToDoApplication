@@ -2,16 +2,18 @@ package com.example.to_do.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.to_do.datastore.UserPreferencesManager
 import com.example.to_do.model.LoginRequest
-import com.example.to_do.model.User
-import com.example.to_do.network.RetrofitInstance
-import kotlinx.coroutines.launch
+import com.example.to_do.network.ApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class LoginViewModel : ViewModel() {
-    private val _loginState = MutableStateFlow<User?>(null)
-    val loginState: StateFlow<User?> get() = _loginState
+data class LoginState(val isSuccess: Boolean = false, val userId: String? = null)
+
+class LoginViewModel(private val userPreferencesManager: UserPreferencesManager) : ViewModel() {
+    private val _loginState = MutableStateFlow(LoginState())
+    val loginState: StateFlow<LoginState> get() = _loginState
 
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> get() = _errorMessage
@@ -19,9 +21,14 @@ class LoginViewModel : ViewModel() {
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
-                val response = RetrofitInstance.api.login(LoginRequest(email, password))
+                val response = ApiService.getInstance().login(LoginRequest(email, password))
                 if (response.isSuccessful) {
-                    _loginState.value = response.body()
+                    response.body()?.let { loginResponse ->
+                        userPreferencesManager.saveUserId(loginResponse.userId)
+                        _loginState.value = LoginState(isSuccess = true, userId = loginResponse.userId)
+                    } ?: run {
+                        _errorMessage.value = "Login failed"
+                    }
                 } else {
                     _errorMessage.value = "Login failed"
                 }

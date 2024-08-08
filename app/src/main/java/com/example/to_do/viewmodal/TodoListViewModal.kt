@@ -2,6 +2,7 @@ package com.example.to_do.viewmodal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.to_do.datastore.UserPreferencesManager
 import com.example.to_do.model.TodoItem
 import com.example.to_do.model.TodoRequest
 import com.example.to_do.network.RetrofitInstance
@@ -9,7 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class TodoListViewModel : ViewModel() {
+class TodoListViewModel(userPreferencesManager: UserPreferencesManager) : ViewModel() {
     private val _todoItems = MutableStateFlow<List<TodoItem>>(emptyList())
     val todoItems: StateFlow<List<TodoItem>> get() = _todoItems
 

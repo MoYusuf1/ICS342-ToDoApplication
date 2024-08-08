@@ -1,24 +1,9 @@
+package com.example.to_do.ui
+
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,24 +12,38 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.to_do.TodoDialog
 import com.example.to_do.viewmodal.TodoListViewModel
+import com.example.to_do.viewmodal.ViewModelFactory
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(userId: String) {
-    val todoListViewModel: TodoListViewModel = viewModel()
+fun MainScreen(
+    userId: String?,
+    onLogout: () -> Unit,
+    factory: ViewModelFactory
+) {
+    val todoListViewModel: TodoListViewModel = viewModel(factory = factory)
     val todoItems by todoListViewModel.todoItems.collectAsState()
     val errorMessage by todoListViewModel.errorMessage.collectAsState()
     val (showDialog, setShowDialog) = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(userId) {
-        todoListViewModel.getTodos(userId)
+        if (userId != null) {
+            todoListViewModel.getTodos(userId)
+        }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Todo App") })
+            TopAppBar(
+                title = { Text("Todo App") },
+                actions = {
+                    IconButton(onClick = onLogout) {
+                        Text("Logout")
+                    }
+                }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { setShowDialog(true) }) {
@@ -69,11 +68,13 @@ fun MainScreen(userId: String) {
                         checked = item.isCompleted,
                         onCheckedChange = {
                             scope.launch {
-                                todoListViewModel.updateTodo(
-                                    userId = userId,
-                                    todoId = item.id,
-                                    isCompleted = it
-                                )
+                                if (userId != null) {
+                                    todoListViewModel.updateTodo(
+                                        userId = userId,
+                                        todoId = item.id,
+                                        isCompleted = it
+                                    )
+                                }
                             }
                         }
                     )
@@ -86,10 +87,12 @@ fun MainScreen(userId: String) {
                 onDismiss = { setShowDialog(false) },
                 onSave = { text ->
                     scope.launch {
-                        todoListViewModel.createTodo(
-                            userId = userId,
-                            text = text
-                        )
+                        if (userId != null) {
+                            todoListViewModel.createTodo(
+                                userId = userId,
+                                text = text
+                            )
+                        }
                         setShowDialog(false)
                     }
                 }
