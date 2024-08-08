@@ -1,26 +1,25 @@
 package com.example.to_do.viewmodal
 
-import LoginViewModel
-import UserPreferencesManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.to_do.datastore.UserPreferencesManager
+import com.example.to_do.network.RetrofitInstance
 import com.example.to_do.viewmodel.CreateAccountViewModel
+import com.example.to_do.viewmodel.LoginViewModel
+import com.example.to_do.viewmodel.TodoListViewModel
 
+class ViewModelFactory(
+    private val userPreferencesManager: UserPreferencesManager
+) : ViewModelProvider.Factory {
 
-@Suppress("UNCHECKED_CAST")
-class ViewModelFactory(private val userPreferencesManager: UserPreferencesManager) : ViewModelProvider.Factory {
+    private val apiService = RetrofitInstance.apiService
+
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return when {
-            modelClass.isAssignableFrom(LoginViewModel::class.java) -> {
-                LoginViewModel(userPreferencesManager) as T
-            }
-            modelClass.isAssignableFrom(CreateAccountViewModel::class.java) -> {
-                CreateAccountViewModel(userPreferencesManager) as T
-            }
-            modelClass.isAssignableFrom(TodoListViewModel::class.java) -> {
-                TodoListViewModel(userPreferencesManager) as T
-            }
+        return when (modelClass) {
+            LoginViewModel::class.java -> LoginViewModel(apiService, userPreferencesManager)
+            CreateAccountViewModel::class.java -> CreateAccountViewModel(apiService, userPreferencesManager)
+            TodoListViewModel::class.java -> TodoListViewModel(apiService)
             else -> throw IllegalArgumentException("Unknown ViewModel class")
-        }
+        } as T
     }
 }

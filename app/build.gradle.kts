@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation (libs.timber)
+    implementation(libs.compose.runtime)
     implementation (libs.androidx.lifecycle.viewmodel.compose)
     implementation (libs.androidx.datastore.preferences)
     testImplementation(libs.junit)

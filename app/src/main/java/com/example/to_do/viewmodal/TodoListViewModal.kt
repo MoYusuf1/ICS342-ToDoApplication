@@ -1,28 +1,33 @@
-package com.example.to_do.viewmodal
+package com.example.to_do.viewmodel
 
-import UserPreferencesManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.to_do.model.TodoItem
 import com.example.to_do.model.TodoRequest
-import com.example.to_do.network.RetrofitInstance
+import com.example.to_do.network.ApiService
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
-class TodoListViewModel(userPreferencesManager: UserPreferencesManager) : ViewModel() {
-    private val _todoItems = MutableStateFlow<List<TodoItem>>(emptyList())
-    val todoItems: StateFlow<List<TodoItem>> get() = _todoItems
+class TodoListViewModel(
+    private val apiService: ApiService
+) : ViewModel() {
+
+    private val _todoList = MutableStateFlow<List<TodoItem>>(emptyList())
+    val todoList: StateFlow<List<TodoItem>> = _todoList
 
     private val _errorMessage = MutableStateFlow("")
-    val errorMessage: StateFlow<String> get() = _errorMessage
+    val errorMessage: StateFlow<String> = _errorMessage
 
-    fun getTodos(userId: String) {
+    fun loadTodos(apiKey: String) {
         viewModelScope.launch {
             try {
-                val response = RetrofitInstance.api.getTodos(userId)
+                val response = apiService.getAllTodos(apiKey)
                 if (response.isSuccessful) {
-                    _todoItems.value = response.body() ?: emptyList()
+                    response.body()?.let {
+                        _todoList.value = it
+                    } ?: run {
+                        _errorMessage.value = "Failed to load todos"
+                    }
                 } else {
                     _errorMessage.value = "Failed to load todos"
                 }
@@ -32,12 +37,19 @@ class TodoListViewModel(userPreferencesManager: UserPreferencesManager) : ViewMo
         }
     }
 
-    fun createTodo(userId: String, text: String) {
+    fun createTodo(apiKey: String, description: String, completed: Boolean) {
         viewModelScope.launch {
             try {
-                val response = RetrofitInstance.api.createTodo(userId, TodoRequest(text, false))
+                val response = apiService.createTodo(
+                    apiKey,
+                    TodoRequest(description, completed)
+                )
                 if (response.isSuccessful) {
-                    _todoItems.value += response.body()!!
+                    response.body()?.let {
+                        _todoList.value = _todoList.value + it
+                    } ?: run {
+                        _errorMessage.value = "Failed to create todo"
+                    }
                 } else {
                     _errorMessage.value = "Failed to create todo"
                 }
@@ -47,19 +59,40 @@ class TodoListViewModel(userPreferencesManager: UserPreferencesManager) : ViewMo
         }
     }
 
-    fun updateTodo(userId: String, todoId: String, isCompleted: Boolean) {
+    fun updateTodo(apiKey: String, id: Int, description: String, completed: Boolean) {
         viewModelScope.launch {
             try {
-                val todo = _todoItems.value.find { it.id == todoId }
-                if (todo != null) {
-                    val response = RetrofitInstance.api.updateTodo(userId, todoId, TodoRequest(todo.text, isCompleted))
-                    if (response.isSuccessful) {
-                        _todoItems.value = _todoItems.value.map {
-                            if (it.id == todoId) response.body()!! else it
-                        }
-                    } else {
+                val response = apiService.updateTodo(
+                    id,
+                    apiKey,
+                    TodoRequest(description, completed)
+                )
+                if (response.isSuccessful) {
+                    response.body()?.let { updatedTodo ->
+                        _todoList.value = _todoList.value.map { if (it.id == id) updatedTodo else it }
+                    } ?: run {
                         _errorMessage.value = "Failed to update todo"
                     }
+                } else {
+                    _errorMessage.value = "Failed to update todo"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Network error"
+            }
+        }
+    }
+
+    fun deleteTodo(apiKey: String, id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.deleteTodo(
+                    id,
+                    apiKey
+                )
+                if (response.isSuccessful) {
+                    _todoList.value = _todoList.value.filter { it.id != id }
+                } else {
+                    _errorMessage.value = "Failed to delete todo"
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Network error"

@@ -1,21 +1,23 @@
 package com.example.to_do.ui
 
-import LoginViewModel
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.to_do.viewmodal.ViewModelFactory
+import com.example.to_do.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: (String) -> Unit,
     onCreateAccount: () -> Unit,
-    factory: ViewModelFactory
+    factory: ViewModelFactory,
+    apiKey: String
 ) {
     val loginViewModel: LoginViewModel = viewModel(factory = factory)
     val email = remember { mutableStateOf(TextFieldValue("")) }
@@ -49,11 +51,7 @@ fun LoginScreen(
             Text("Create Account")
         }
         if (errorMessage.isNotEmpty()) {
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
+            Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
         }
     }
 

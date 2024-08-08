@@ -2,50 +2,49 @@ package com.example.to_do.network
 
 import com.example.to_do.model.*
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
-
+import retrofit2.http.*
 
 interface ApiService {
-    data class LoginRequest(val email: String, val password: String)
-    data class LoginResponse(val userId: String)
 
-    @POST("login")
-    suspend fun login(@Body request: com.example.to_do.model.LoginRequest): retrofit2.Response<LoginResponse>
+    // Generic Todos
+    @GET("api/todos")
+    suspend fun getAllTodos(@Query("apikey") apikey: String): Response<List<TodoItem>>
 
-    companion object {
-        private var retrofitService: ApiService? = null
+    @GET("api/todos/{id}")
+    suspend fun getTodo(@Path("id") id: Int, @Query("apikey") apikey: String): Response<TodoItem>
 
-        fun getInstance(): ApiService {
-            if (retrofitService == null) {
-                val retrofit = Retrofit.Builder()
-                    .baseUrl("https://api.example.com/") // Replace with your API base URL
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                retrofitService = retrofit.create(ApiService::class.java)
-            }
-            return retrofitService!!
-        }
-    }
+    @POST("api/todos")
+    suspend fun createTodo(@Query("apikey") apikey: String, @Body todoRequest: TodoRequest): Response<TodoItem>
 
-    @POST("/api/users/register")
-    suspend fun register(@Body request: RegisterRequest): Response<User>
+    @PUT("api/todos/{id}")
+    suspend fun updateTodo(@Path("id") id: Int, @Query("apikey") apikey: String, @Body todoRequest: TodoRequest): Response<TodoItem>
 
-    @GET("/api/users/{user_id}/todos")
-    suspend fun getTodos(@Path("user_id") userId: String): Response<List<TodoItem>>
+    @DELETE("api/todos/{id}")
+    suspend fun deleteTodo(@Path("id") id: Int, @Query("apikey") apikey: String): Response<Void>
 
-    @POST("/api/users/{user_id}/todos")
-    suspend fun createTodo(@Path("user_id") userId: String, @Body request: TodoRequest): Response<TodoItem>
+    @DELETE("api/todos")
+    suspend fun deleteAllTodos(@Query("apikey") apikey: String): Response<Void>
 
-    @POST("/api/users/register")
-    suspend fun registerUser(@Body registerRequest: RegisterRequest): Response<User>
+    // User Accounts
+    @POST("api/users/register")
+    suspend fun registerUser(@Query("apikey") apikey: String, @Body registerRequest: RegisterRequest): Response<RegisterResponse>
 
-    @PUT("/api/users/{user_id}/todos/{id}")
-    suspend fun updateTodo(@Path("user_id") userId: String, @Path("id") todoId: String, @Body request: TodoRequest): Response<TodoItem>
+    @POST("api/users/login")
+    suspend fun loginUser(@Query("apikey") apikey: String, @Body loginRequest: LoginRequest): Response<LoginResponse>
+
+    // User Todos
+    @GET("api/users/{user_id}/todos")
+    suspend fun getUserTodos(@Path("user_id") userId: Int, @Query("apikey") apikey: String, @Header("Authorization") token: String): Response<List<TodoItem>>
+
+    @POST("api/users/{user_id}/todos")
+    suspend fun createUserTodo(@Path("user_id") userId: Int, @Query("apikey") apikey: String, @Header("Authorization") token: String, @Body todoRequest: TodoRequest): Response<TodoItem>
+
+    @PUT("api/users/{user_id}/todos/{id}")
+    suspend fun updateUserTodo(@Path("user_id") userId: Int, @Path("id") id: Int, @Query("apikey") apikey: String, @Header("Authorization") token: String, @Body todoRequest: TodoRequest): Response<TodoItem>
+
+    @DELETE("api/users/{user_id}/todos/{id}")
+    suspend fun deleteUserTodo(@Path("user_id") userId: Int, @Path("id") id: Int, @Query("apikey") apikey: String, @Header("Authorization") token: String): Response<Void>
+
+    @DELETE("api/users/{user_id}/todos")
+    suspend fun deleteUserTodos(@Path("user_id") userId: Int, @Query("apikey") apikey: String, @Header("Authorization") token: String): Response<Void>
 }
-

@@ -1,12 +1,12 @@
 package com.example.to_do.ui
 
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.to_do.viewmodal.ViewModelFactory
 import com.example.to_do.viewmodel.CreateAccountViewModel
@@ -15,7 +15,8 @@ import com.example.to_do.viewmodel.CreateAccountViewModel
 fun CreateAccountScreen(
     onAccountCreated: (String) -> Unit,
     onLogin: () -> Unit,
-    factory: ViewModelFactory
+    factory: ViewModelFactory,
+    apiKey: String // Ensure this is the correct API key
 ) {
     val createAccountViewModel: CreateAccountViewModel = viewModel(factory = factory)
     val email = remember { mutableStateOf(TextFieldValue("")) }
@@ -47,9 +48,12 @@ fun CreateAccountScreen(
             label = { Text("Password") }
         )
         Button(onClick = {
-            createAccountViewModel.register(name.value.text, email.value.text, password.value.text)
+            createAccountViewModel.register(name.value.text, email.value.text, password.value.text, apiKey)
         }) {
             Text("Create Account")
+        }
+        OutlinedButton(onClick = onLogin) { // Ensure this button is present to use onLogin
+            Text("Login")
         }
         if (errorMessage.isNotEmpty()) {
             Text(text = errorMessage, color = MaterialTheme.colorScheme.error)

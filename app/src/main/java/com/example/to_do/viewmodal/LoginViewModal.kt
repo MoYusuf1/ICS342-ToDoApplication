@@ -1,32 +1,37 @@
+package com.example.to_do.viewmodel
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.to_do.model.LoginRequest
 import com.example.to_do.network.ApiService
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.example.to_do.datastore.UserPreferencesManager
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class LoginViewModel(private val userPreferencesManager: UserPreferencesManager) : ViewModel() {
+class LoginViewModel(
+    private val apiService: ApiService,
+    private val userPreferencesManager: UserPreferencesManager
+) : ViewModel() {
 
     private val _loginState = MutableStateFlow(LoginState())
-    val loginState: StateFlow<LoginState> get() = _loginState
+    val loginState: StateFlow<LoginState> = _loginState
 
     private val _errorMessage = MutableStateFlow("")
-    val errorMessage: StateFlow<String> get() = _errorMessage
+    val errorMessage: StateFlow<String> = _errorMessage
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
-                val response = ApiService.getInstance().login(LoginRequest(email, password))
+                val response = apiService.loginUser("YOUR_API_KEY", LoginRequest(email, password))
                 if (response.isSuccessful) {
-                    response.body()?.let { loginResponse ->
-                        userPreferencesManager.saveUserId(loginResponse.userId)
-                        _loginState.value = LoginState(isSuccess = true, userId = loginResponse.userId)
+                    response.body()?.let {
+                        userPreferencesManager.saveUserId(it.id.toString())
+                        _loginState.value = LoginState(isSuccess = true, userId = it.id.toString())
                     } ?: run {
-                        _loginState.value = LoginState(errorMessage = "Login failed")
+                        _errorMessage.value = "Login failed"
                     }
                 } else {
-                    _loginState.value = LoginState(errorMessage = "Login failed")
+                    _errorMessage.value = "Login failed"
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Network error"
@@ -35,4 +40,7 @@ class LoginViewModel(private val userPreferencesManager: UserPreferencesManager)
     }
 }
 
-data class LoginState(val isSuccess: Boolean = false, val userId: String? = null, val errorMessage: String = "")
+data class LoginState(
+    val isSuccess: Boolean = false,
+    val userId: String? = null
+)

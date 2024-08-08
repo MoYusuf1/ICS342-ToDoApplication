@@ -1,114 +1,51 @@
 package com.example.to_do.ui
 
-import androidx.compose.foundation.background
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.to_do.TodoDialog
-import com.example.to_do.viewmodal.TodoListViewModel
 import com.example.to_do.viewmodal.ViewModelFactory
-import kotlinx.coroutines.launch
+import com.example.to_do.viewmodel.TodoListViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    userId: String?,
+    userIdKey: String?,
     onLogout: () -> Unit,
-    factory: ViewModelFactory
+    factory: ViewModelFactory,
+    apiKey: String
 ) {
     val todoListViewModel: TodoListViewModel = viewModel(factory = factory)
-    val todoItems by todoListViewModel.todoItems.collectAsState()
-    val errorMessage by todoListViewModel.errorMessage.collectAsState()
-    val (showDialog, setShowDialog) = remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+    var newTodoText by remember { mutableStateOf("") }
 
-    LaunchedEffect(userId) {
-        if (userId != null) {
-            todoListViewModel.getTodos(userId)
-        }
-    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        TextField(
+            value = newTodoText,
+            onValueChange = { newTodoText = it },
+            label = { Text("New Todo") }
+        )
+        Button(onClick = {
+            userIdKey?.let {
+                todoListViewModel.createTodo(
+                    description = newTodoText,
+                    completed = false,
+                    apiKey = apiKey,
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Todo App") },
-                actions = {
-                    IconButton(onClick = onLogout) {
-                        Text("Logout")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { setShowDialog(true) }) {
-                Text("+")
+                )
             }
+        }) {
+            Text("Add Todo")
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
-            todoItems.forEach { item ->
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = item.text, fontSize = 20.sp)
-                    Checkbox(
-                        checked = item.isCompleted,
-                        onCheckedChange = {
-                            scope.launch {
-                                if (userId != null) {
-                                    todoListViewModel.updateTodo(
-                                        userId = userId,
-                                        todoId = item.id,
-                                        isCompleted = it
-                                    )
-                                }
-                            }
-                        }
-                    )
-                }
-            }
-        }
-
-        if (showDialog) {
-            TodoDialog(
-                onDismiss = { setShowDialog(false) },
-                onSave = { text ->
-                    scope.launch {
-                        if (userId != null) {
-                            todoListViewModel.createTodo(
-                                userId = userId,
-                                text = text
-                            )
-                        }
-                        setShowDialog(false)
-                    }
-                }
-            )
-        }
-
-        if (errorMessage.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0x80000000))
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = errorMessage, color = Color.Red, fontSize = 16.sp)
-            }
+        Button(onClick = onLogout) {
+            Text("Logout")
         }
     }
 }

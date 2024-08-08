@@ -1,3 +1,7 @@
 package com.example.to_do.model
 
-data class TodoRequest(val text: String, val isCompleted: Boolean)
+data class TodoRequest(
+    val description: String,
+    val completed: Boolean? = false,
+    val meta: Map<String, String>? = null
+)
