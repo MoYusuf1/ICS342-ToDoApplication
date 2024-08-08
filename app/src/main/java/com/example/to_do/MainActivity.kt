@@ -1,15 +1,30 @@
 package com.example.to_do
 
+import MainScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,98 +34,46 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.to_do.ui.CreateAccountScreen
+import com.example.to_do.ui.LoginScreen
 import com.example.to_do.ui.theme.TodoTheme
-import com.example.to_do.viewmodal.TodoListViewModel
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             TodoTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    MainScreen()
-                }
+                AppNavigator()
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
-    val todoListViewModel: TodoListViewModel = viewModel()
-    val todoItems by todoListViewModel.todoItems.collectAsState()
-    val errorMessage by todoListViewModel.errorMessage.collectAsState()
-    val (showDialog, setShowDialog) = remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+fun AppNavigator() {
+    var currentScreen by remember { mutableStateOf("login") }
+    var userId by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Todo App") })
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { setShowDialog(true) }) {
-                Text("+")
+    when (currentScreen) {
+        "login" -> LoginScreen(
+            onLoginSuccess = {
+                userId = it
+                currentScreen = "main"
+            },
+            onCreateAccount = {
+                currentScreen = "createAccount"
             }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
-            todoItems.forEach { item ->
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = item.text, fontSize = 20.sp)
-                    Checkbox(
-                        checked = item.isCompleted,
-                        onCheckedChange = {
-                            scope.launch {
-                                todoListViewModel.updateTodo(
-                                    userId = "user_id",
-                                    todoId = item.id,
-                                    isCompleted = it
-                                )
-                            }
-                        }
-                    )
-                }
+        )
+        "createAccount" -> CreateAccountScreen(
+            onAccountCreated = {
+                userId = it
+                currentScreen = "main"
+            },
+            onLogin = {
+                currentScreen = "login"
             }
-        }
-
-        if (showDialog) {
-            TodoDialog(
-                onDismiss = { setShowDialog(false) },
-                onSave = { text ->
-                    scope.launch {
-                        todoListViewModel.createTodo(
-                            userId = "user_id",
-                            text = text
-                        )
-                        setShowDialog(false)
-                    }
-                }
-            )
-        }
-
-        if (errorMessage.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0x80000000))
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = errorMessage, color = Color.Red, fontSize = 16.sp)
-            }
-        }
+        )
+        "main" -> userId?.let { MainScreen(userId = it) }
     }
 }
 
