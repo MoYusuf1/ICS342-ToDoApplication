@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class TodoListViewModel(
-    private val apiService: ApiService
+    private val apiService: ApiService,
 ) : ViewModel() {
 
     private val _todoList = MutableStateFlow<List<TodoItem>>(emptyList())
@@ -18,10 +18,10 @@ class TodoListViewModel(
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> = _errorMessage
 
-    fun loadTodos(userId: String, apiKey: String) {
+    fun loadTodos(apiKey: String) {
         viewModelScope.launch {
             try {
-                val response = apiService.getUserTodos(userId.toInt(), apikey = apiKey)
+                val response = apiService.getAllTodos(apiKey) // Assuming your API supports this
                 if (response.isSuccessful) {
                     response.body()?.let {
                         _todoList.value = it
@@ -32,7 +32,7 @@ class TodoListViewModel(
                     _errorMessage.value = "Failed to load todos"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Network error: ${e.message}"
+                _errorMessage.value = "Network error"
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.example.to_do.datastore
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -29,6 +30,9 @@ class UserPreferencesManager(private val context: Context) {
     suspend fun clearUserId() {
         context.dataStore.edit { preferences ->
             preferences.remove(USER_ID_KEY)
+            // Log the clear action
+            Log.d("UserPreferencesManager", "UserId cleared: ${preferences[USER_ID_KEY]}")
         }
     }
+
 }

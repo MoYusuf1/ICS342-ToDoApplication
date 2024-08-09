@@ -1,10 +1,5 @@
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.to_do.datastore.UserPreferencesManager
 import com.example.to_do.ui.CreateAccountScreen
@@ -21,21 +16,26 @@ fun AppNavigator(
     apiKey: String
 ) {
     val scope = rememberCoroutineScope()
-    var userId by remember { mutableStateOf("") }
-    var currentScreen by remember { mutableStateOf("login") }
+    var userId by rememberSaveable { mutableStateOf("") }
+    var currentScreen by rememberSaveable { mutableStateOf("login") }
 
     LaunchedEffect(Unit) {
         userPreferencesManager.userId.collect { id ->
             userId = id ?: ""
-            currentScreen = if (userId.isEmpty()) "login" else "main"
+            if (userId.isNotEmpty()) {
+                currentScreen = "main"
+            }
         }
     }
 
     when (currentScreen) {
         "login" -> LoginScreen(
             onLoginSuccess = { id ->
-                userId = id
-                currentScreen = "main"
+                scope.launch {
+                    userPreferencesManager.saveUserId(id)
+                    userId = id
+                    currentScreen = "main"
+                }
             },
             onCreateAccount = {
                 currentScreen = "createAccount"
@@ -45,8 +45,11 @@ fun AppNavigator(
         )
         "createAccount" -> CreateAccountScreen(
             onAccountCreated = { id ->
-                userId = id
-                currentScreen = "main"
+                scope.launch {
+                    userPreferencesManager.saveUserId(id)
+                    userId = id
+                    currentScreen = "main"
+                }
             },
             onLogin = {
                 currentScreen = "login"
@@ -55,7 +58,6 @@ fun AppNavigator(
             apiKey = apiKey
         )
         "main" -> {
-            // Create an instance of TodoListViewModel
             val todoListViewModel: TodoListViewModel = viewModel(factory = factory)
 
             MainScreen(

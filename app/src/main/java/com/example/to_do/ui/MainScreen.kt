@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.to_do.network.apiKey
 import com.example.to_do.viewmodal.TodoListViewModel
 
 @Composable
@@ -24,7 +23,7 @@ fun MainScreen(
 
     LaunchedEffect(Unit) {
         if (userIdKey != null) {
-            todoListViewModel.loadTodos(apiKey = apiKey, userId = userIdKey)
+            todoListViewModel.loadTodos(apiKey = apiKey)
         }
     }
 
