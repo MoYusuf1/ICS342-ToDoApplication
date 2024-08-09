@@ -1,8 +1,17 @@
-package com.example.to_do.ui
-
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.to_do.datastore.UserPreferencesManager
+import com.example.to_do.ui.CreateAccountScreen
+import com.example.to_do.ui.LoginScreen
+import com.example.to_do.ui.MainScreen
 import com.example.to_do.viewmodal.ViewModelFactory
+import com.example.to_do.viewmodel.TodoListViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -45,17 +54,22 @@ fun AppNavigator(
             factory = factory,
             apiKey = apiKey
         )
-        "main" -> MainScreen(
-            userIdKey = userId,
-            onLogout = {
-                scope.launch {
-                    userPreferencesManager.clearUserId()
-                    userId = ""
-                    currentScreen = "login"
-                }
-            },
-            factory = factory,
-            apiKey = apiKey
-        )
+        "main" -> {
+            // Create an instance of TodoListViewModel
+            val todoListViewModel: TodoListViewModel = viewModel(factory = factory)
+
+            MainScreen(
+                userIdKey = userId,
+                onLogout = {
+                    scope.launch {
+                        userPreferencesManager.clearUserId()
+                        userId = ""
+                        currentScreen = "login"
+                    }
+                },
+                apiKey = apiKey,
+                todoListViewModel = todoListViewModel
+            )
+        }
     }
 }

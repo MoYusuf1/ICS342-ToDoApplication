@@ -46,7 +46,7 @@ class TodoListViewModel(
                 )
                 if (response.isSuccessful) {
                     response.body()?.let {
-                        _todoList.value = _todoList.value + it
+                        _todoList.value += it
                     } ?: run {
                         _errorMessage.value = "Failed to create todo"
                     }

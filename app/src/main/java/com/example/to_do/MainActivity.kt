@@ -1,10 +1,10 @@
 package com.example.to_do
 
+import AppNavigator
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.to_do.datastore.UserPreferencesManager
-import com.example.to_do.ui.AppNavigator
 import com.example.to_do.viewmodal.ViewModelFactory
 
 class MainActivity : ComponentActivity() {
