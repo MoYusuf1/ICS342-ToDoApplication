@@ -23,10 +23,12 @@ class CreateAccountViewModel(
     fun register(name: String, email: String, password: String, apiKey: String) {
         viewModelScope.launch {
             try {
+                Log.d("CreateAccountViewModel", "Attempting to register user: $email")
                 val response = apiService.registerUser(apiKey, RegisterRequest(name, email, password))
-                Log.d("Response:", response.toString())
+                Log.d("CreateAccountViewModel", "Response received: $response")
                 if (response.isSuccessful) {
                     response.body()?.let {
+                        Log.d("CreateAccountViewModel", "Registration successful: ${it.id}")
                         userPreferencesManager.saveUserId(it.id.toString())
                         _registerState.value = RegisterState(isSuccess = true, userId = it.id.toString())
                     } ?: run {
@@ -34,8 +36,9 @@ class CreateAccountViewModel(
                         Log.e("CreateAccountViewModel", "Registration failed: Empty response body")
                     }
                 } else {
-                    _errorMessage.value = "Registration failed: ${response.errorBody()?.string()}"
-                    Log.e("CreateAccountViewModel", "Registration failed: ${response.errorBody()?.string()}")
+                    val errorResponse = response.errorBody()?.string() ?: "Unknown error"
+                    _errorMessage.value = "Registration failed: $errorResponse"
+                    Log.e("CreateAccountViewModel", "Registration failed: $errorResponse")
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Network error: ${e.message}"

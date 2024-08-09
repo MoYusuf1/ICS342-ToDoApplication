@@ -7,6 +7,7 @@ import com.example.to_do.network.ApiService
 import com.example.to_do.datastore.UserPreferencesManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class LoginViewModel(
     private val apiService: ApiService,
@@ -22,19 +23,26 @@ class LoginViewModel(
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
-                val response = apiService.loginUser("YOUR_API_KEY", LoginRequest(email, password))
+                Log.d("LoginViewModel", "Attempting to log in user: $email")
+                val response = apiService.loginUser("6cd34bb8-1740-4dbd-98cf-35e2b77ae787", LoginRequest(email, password))
+                Log.d("LoginViewModel", "Response received: $response")
                 if (response.isSuccessful) {
                     response.body()?.let {
+                        Log.d("LoginViewModel", "Login successful: ${it.id}")
                         userPreferencesManager.saveUserId(it.id.toString())
                         _loginState.value = LoginState(isSuccess = true, userId = it.id.toString())
                     } ?: run {
-                        _errorMessage.value = "Login failed"
+                        _errorMessage.value = "Login failed: Empty response body"
+                        Log.e("LoginViewModel", "Login failed: Empty response body")
                     }
                 } else {
-                    _errorMessage.value = "Login failed"
+                    val errorResponse = response.errorBody()?.string() ?: "Unknown error"
+                    _errorMessage.value = "Login failed: $errorResponse"
+                    Log.e("LoginViewModel", "Login failed: $errorResponse")
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Network error"
+                _errorMessage.value = "Network error: ${e.message}"
+                Log.e("LoginViewModel", "Network error", e)
             }
         }
     }
