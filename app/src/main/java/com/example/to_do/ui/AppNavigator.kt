@@ -11,7 +11,7 @@ import com.example.to_do.ui.CreateAccountScreen
 import com.example.to_do.ui.LoginScreen
 import com.example.to_do.ui.MainScreen
 import com.example.to_do.viewmodal.ViewModelFactory
-import com.example.to_do.viewmodel.TodoListViewModel
+import com.example.to_do.viewmodal.TodoListViewModel
 import kotlinx.coroutines.launch
 
 @Composable

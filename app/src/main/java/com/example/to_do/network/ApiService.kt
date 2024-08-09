@@ -4,8 +4,10 @@ import com.example.to_do.model.*
 import retrofit2.Response
 import retrofit2.http.*
 
-interface ApiService {
 
+const val apiKey = "6cd34bb8-1740-4dbd-98cf-35e2b77ae787"
+
+interface ApiService {
     // Generic Todos
     @GET("api/todos")
     suspend fun getAllTodos(@Query("apikey") apikey: String): Response<List<TodoItem>>
@@ -34,7 +36,7 @@ interface ApiService {
 
     // User Todos
     @GET("api/users/{user_id}/todos")
-    suspend fun getUserTodos(@Path("user_id") userId: Int, @Query("apikey") apikey: String, @Header("Authorization") token: String): Response<List<TodoItem>>
+    suspend fun getUserTodos(@Path("user_id") userId: Int, @Query("apikey") apikey: String): Response<List<TodoItem>>
 
     @POST("api/users/{user_id}/todos")
     suspend fun createUserTodo(@Path("user_id") userId: Int, @Query("apikey") apikey: String, @Header("Authorization") token: String, @Body todoRequest: TodoRequest): Response<TodoItem>

@@ -1,4 +1,4 @@
-package com.example.to_do.viewmodel
+package com.example.to_do.viewmodal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,10 +18,10 @@ class TodoListViewModel(
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> = _errorMessage
 
-    fun loadTodos(apiKey: String) {
+    fun loadTodos(userId: String, apiKey: String) {
         viewModelScope.launch {
             try {
-                val response = apiService.getAllTodos(apiKey)
+                val response = apiService.getUserTodos(userId.toInt(), apikey = apiKey)
                 if (response.isSuccessful) {
                     response.body()?.let {
                         _todoList.value = it
@@ -32,10 +32,11 @@ class TodoListViewModel(
                     _errorMessage.value = "Failed to load todos"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Network error"
+                _errorMessage.value = "Network error: ${e.message}"
             }
         }
     }
+
 
     fun createTodo(apiKey: String, description: String, completed: Boolean) {
         viewModelScope.launch {

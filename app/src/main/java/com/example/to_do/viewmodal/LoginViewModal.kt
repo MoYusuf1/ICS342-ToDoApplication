@@ -8,6 +8,7 @@ import com.example.to_do.datastore.UserPreferencesManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import android.util.Log
+import com.example.to_do.network.apiKey
 
 class LoginViewModel(
     private val apiService: ApiService,
@@ -24,7 +25,7 @@ class LoginViewModel(
         viewModelScope.launch {
             try {
                 Log.d("LoginViewModel", "Attempting to log in user: $email")
-                val response = apiService.loginUser("6cd34bb8-1740-4dbd-98cf-35e2b77ae787", LoginRequest(email, password))
+                val response = apiService.loginUser(apikey = apiKey, LoginRequest(email, password))
                 Log.d("LoginViewModel", "Response received: $response")
                 if (response.isSuccessful) {
                     response.body()?.let {
