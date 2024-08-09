@@ -37,8 +37,6 @@ class TodoListViewModel(
         }
     }
 
-
-
     fun createTodo(apiKey: String, description: String, completed: Boolean) {
         viewModelScope.launch {
             try {
