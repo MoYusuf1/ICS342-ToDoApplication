@@ -1,4 +1,4 @@
-package com.example.to_do.viewmodel
+package com.example.to_do.viewmodal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

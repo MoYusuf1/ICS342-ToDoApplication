@@ -29,15 +29,13 @@ class TodoListViewModel(
                         _errorMessage.value = "Failed to load todos"
                     }
                 } else {
-                    _errorMessage.value = "Failed to load todos"
+                    _errorMessage.value = "Failed to load todos "
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Network error"
             }
         }
     }
-
-
 
     fun createTodo(apiKey: String, description: String, completed: Boolean) {
         viewModelScope.launch {
