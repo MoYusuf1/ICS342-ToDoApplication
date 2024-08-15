@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.to_do.viewmodal.ViewModelFactory
-import com.example.to_do.viewmodel.CreateAccountViewModel
+import com.example.to_do.viewmodal.CreateAccountViewModel
 
 @Composable
 fun CreateAccountScreen(
